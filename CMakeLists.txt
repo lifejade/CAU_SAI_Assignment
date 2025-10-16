@@ -58,7 +58,7 @@ endif()
 ### EXAMPLE:
 ### add_executable(test demo-simple-example.cpp)
 
-add_executable(basic basic.cpp)
-add_executable(fc fc.cpp)
-add_executable(conv conv.cpp)
-add_executable(relu relu.cpp)
+add_executable(1 1-basic.cpp)
+add_executable(2 2-fc.cpp)
+add_executable(3 3-conv.cpp)
+add_executable(4 4-relu.cpp)

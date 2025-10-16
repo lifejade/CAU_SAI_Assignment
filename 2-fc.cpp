@@ -1,7 +1,6 @@
 
 #include <fstream>
 #include <iostream>
-#include <iterator>
 #include <random>
 
 #include "openfhe.h"
@@ -11,11 +10,12 @@ using namespace lbcrypto;
 using namespace std;
 
 const double TOL = 0.0001;
-const int LEN = 5;
-const int CLEN = 5;
+const int INPUT_DIM = 128;
+const int OUTPUT_DIM = 25;
 
 
 int main() {
+    srand(static_cast<unsigned>(time(nullptr)));
     CCParams<CryptoContextCKKSRNS> parameters;
     parameters.SetMultiplicativeDepth(10);
     parameters.SetScalingModSize(40);
@@ -26,9 +26,11 @@ int main() {
     cc->Enable(LEVELEDSHE);
     KeyPair<DCRTPoly> kp = cc->KeyGen();
     cc->EvalMultKeyGen(kp.secretKey);
-    vector<int> rotvec(LEN+CLEN-1);
-    for(int i =0;i<LEN+CLEN-1;i++){
-        rotvec[i] = LEN -1 - i;
+
+    //You may add more rotation keys if needed.
+    vector<int> rotvec(INPUT_DIM+OUTPUT_DIM-1);
+    for(int i =0;i<INPUT_DIM+OUTPUT_DIM-1;i++){
+        rotvec[i] = INPUT_DIM -1 - i;
     }
     cc->EvalRotateKeyGen(kp.secretKey, rotvec);
 
@@ -36,46 +38,25 @@ int main() {
     usint cyclOrder = cc->GetCyclotomicOrder();
     int32_t n = cyclOrder / 4;
     vector<double> vec(n,0);
-    for(int i = 0; i < LEN; i++){
+    for(int i = 0; i < INPUT_DIM; i++){
         vec[i] = 2 * double(rand())/RAND_MAX - 1;
     }
     Plaintext pt = cc->MakeCKKSPackedPlaintext(vec);
     auto ct = cc->Encrypt(kp.publicKey, pt);
 
     vector<double> kernel;
-    kernel.resize(LEN*CLEN);
-    for(int i = 0; i < LEN * CLEN; i++){
+    kernel.resize(INPUT_DIM*OUTPUT_DIM);
+    for(int i = 0; i < INPUT_DIM * OUTPUT_DIM; i++){
         kernel[i] = 2 * double(rand())/RAND_MAX - 1;
 
     }
 
 
-    Ciphertext<DCRTPoly> ct_res;
-    //TODO : fill belllow code please!
+    Ciphertext<DCRTPoly> ct_res = ct->Clone();
+
+    //Fill in the following section
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    vector<double> zeros(n,0);
-    pt = cc->MakeCKKSPackedPlaintext(zeros);
-    ct_res = cc->Encrypt(kp.publicKey,pt);
-    vector<double>* kernel_;
-    kernel_ = new vector<double>[CLEN+LEN-1];
-    for (int i = 0;i<CLEN+LEN-1;i++){
-        kernel_[i] = vector<double>(n,0);
-    }
-
-    for (int i = 0;i<CLEN;i++){
-        for(int j=0;j<LEN;j++){
-            kernel_[i-j+LEN - 1][i] = kernel[i*LEN + j];
-        }
-    }
-
-    for(int idx=0; idx < LEN + CLEN - 1; idx++){
-        auto pt_ = cc->MakeCKKSPackedPlaintext(kernel_[idx]);
-        auto ctrot=cc->EvalRotate(ct,LEN - 1 -idx);
-        auto res = cc->EvalMult(pt_,ctrot);
-
-        cc->RescaleInPlace(res);
-        ct_res = cc->EvalAdd(ct_res,res);
-    }
+    
     
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -85,13 +66,14 @@ int main() {
     vector<double> vec_res = pt_res->GetRealPackedValue();
 
     bool ispass = true;
-    for (int i=0;i<CLEN;i++){
+    for (int i=0;i<OUTPUT_DIM;i++){
         double value = 0;
-        for (int j=0;j<LEN;j++){
-            value += kernel[i*LEN+j] * vec[j];
+        for (int j=0;j<INPUT_DIM;j++){
+            value += kernel[i*INPUT_DIM+j] * vec[j];
         }
 
         if (abs(value - vec_res[i]) > TOL){
+            cout << "Wrong at " << i << " : " << value << " vs " << vec_res[i] << endl;
             ispass = false;
             break;
         }

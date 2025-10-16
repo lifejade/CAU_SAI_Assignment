@@ -1,15 +1,5 @@
-/*
-목표 : 4문제
-1. 사칙연산
-
-3. conv
-4. fc 레이어
-2. relu연산
-*/
-
 #include <fstream>
 #include <iostream>
-#include <iterator>
 #include <random>
 
 #include "openfhe.h"
@@ -18,10 +8,10 @@
 using namespace lbcrypto;
 using namespace std;
 
-const double TOL = 0.001;
-
+const double TOL = 0.0001;
 
 int main() {
+  srand(static_cast<unsigned>(time(nullptr)));
   CCParams<CryptoContextCKKSRNS> parameters;
   parameters.SetMultiplicativeDepth(2);
   parameters.SetScalingModSize(40);
@@ -32,7 +22,7 @@ int main() {
   cc->Enable(LEVELEDSHE);
   KeyPair<DCRTPoly> kp = cc->KeyGen();
   cc->EvalMultKeyGen(kp.secretKey);
-  cc->EvalRotateKeyGen(kp.secretKey, {1,2,3});
+  cc->EvalRotateKeyGen(kp.secretKey, {1,2,3,4,5});
 
 
 
@@ -56,16 +46,15 @@ int main() {
   auto ct2 = cc->Encrypt(kp.publicKey, pt2);
 
 
-  Ciphertext<DCRTPoly> add_ct_res;
-  Ciphertext<DCRTPoly> sub_ct_res;
-  Ciphertext<DCRTPoly> mul_ct_res;
-  Ciphertext<DCRTPoly> rot_ct_res;
-  //TODO : fill behind code please!
+  Ciphertext<DCRTPoly> add_ct_res = ct1->Clone();
+  Ciphertext<DCRTPoly> sub_ct_res = ct1->Clone();
+  Ciphertext<DCRTPoly> mul_ct_res = ct1->Clone();
+  Ciphertext<DCRTPoly> rot_left3_ct_res = ct1->Clone();
+
+  //Fill in the following section
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  add_ct_res = cc->EvalAdd(ct1, ct2);
-  sub_ct_res = cc->EvalSub(ct1, ct2);
-  mul_ct_res = cc->EvalMultAndRelinearize(ct1,ct2);
-  rot_ct_res = cc->EvalRotate(ct1, 3);
+
+  
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -76,14 +65,15 @@ int main() {
   vector<complex<double>> sub_vec_res = pt_res->GetCKKSPackedValue();
   cc->Decrypt(kp.secretKey,mul_ct_res,&pt_res);
   vector<complex<double>> mul_vec_res = pt_res->GetCKKSPackedValue();
-  cc->Decrypt(kp.secretKey,rot_ct_res,&pt_res);
-  vector<complex<double>> rot_vec_res = pt_res->GetCKKSPackedValue();
+  cc->Decrypt(kp.secretKey,rot_left3_ct_res,&pt_res);
+  vector<complex<double>> rot_left3_vec_res = pt_res->GetCKKSPackedValue();
 
 
   bool ispass = true;
   for (int i = 0;i<n;i++){
     complex value = vec1[i] + vec2[i];
     if (abs(value - add_vec_res[i]) > TOL){
+      cout << "Wrong at " << i << " : " << value << " vs " << add_vec_res[i] << endl;
       ispass = false;
       break;
     }
@@ -94,6 +84,7 @@ int main() {
   for (int i = 0;i<n;i++){
     complex value = vec1[i] - vec2[i];
     if (abs(value - sub_vec_res[i]) > TOL){
+      cout << "Wrong at " << i << " : " << value << " vs " << sub_vec_res[i] << endl;
       ispass = false;
       break;
     }
@@ -104,16 +95,18 @@ int main() {
   for (int i = 0;i<n;i++){
     complex value = vec1[i] * vec2[i];
     if (abs(value - mul_vec_res[i]) > TOL){
+      cout << "Wrong at " << i << " : " << value << " vs " << mul_vec_res[i] << endl;
       ispass = false;
       break;
     }
   }
   cout << "Multiplication : " << (ispass ? "PASS":"FAIL") << endl;
 
-    ispass = true;
+  ispass = true;
   for (int i = 0;i<n;i++){
     complex value = vec1[(i + 3) % n];
-    if (abs(value - rot_vec_res[i]) > TOL){
+    if (abs(value - rot_left3_vec_res[i]) > TOL){
+      cout << "Wrong at " << i << " : " << value << " vs " << rot_left3_vec_res[i] << endl;
       ispass = false;
       break;
     }
