@@ -77,12 +77,12 @@ int main() {
     }
 
 
-    //The following code evaluates a polynomial on plaintext. Uncomment and run it if you want to test.
-    auto check=evalChainedPolys(coefs, vec);
-    for (size_t i = 0; i < 10; i++)
-    {
-        cout << "Check: 1/2 * sign( "<< vec[i] << " ) = " << check[i] << endl;
-    }
+    // //The following code evaluates a polynomial on plaintext. Uncomment and run it if you want to test.
+    // auto check=evalChainedPolys(coefs, vec);
+    // for (size_t i = 0; i < 10; i++)
+    // {
+    //     cout << "1/2 * sign( "<< vec[i] << " ) = " << check[i] << endl;
+    // }
 
     Ciphertext<DCRTPoly> ct_res = ct->Clone();
     
