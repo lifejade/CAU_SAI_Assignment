@@ -48,11 +48,10 @@ int main() {
     Plaintext pt = cc->MakeCKKSPackedPlaintext(vec);
     auto ct = cc->Encrypt(kp.publicKey, pt);
 
-    vector<double> kernel;
-    kernel.resize(INPUT_DIM*OUTPUT_DIM);
+    vector<double> weight;
+    weight.resize(INPUT_DIM*OUTPUT_DIM);
     for(int i = 0; i < INPUT_DIM * OUTPUT_DIM; i++){
-        kernel[i] = 2 * double(rand())/RAND_MAX - 1;
-
+        weight[i] = 2 * double(rand())/RAND_MAX - 1;
     }
 
 
@@ -73,7 +72,7 @@ int main() {
     for (int i=0;i<OUTPUT_DIM;i++){
         double value = 0;
         for (int j=0;j<INPUT_DIM;j++){
-            value += kernel[i*INPUT_DIM+j] * vec[j];
+            value += weight[i*INPUT_DIM+j] * vec[j];
         }
 
         if (abs(value - vec_res[i]) > TOL){
