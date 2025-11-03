@@ -57,16 +57,14 @@ int main() {
     int32_t n = cyclOrder / 4;
     vector<double> vec(n, 0);
     for(size_t i = 0; i < WIDTH * HEIGHT; i++){
-        // vec[i] = 2 * double(rand())/RAND_MAX - 1;
-        vec[i] = i;
+        vec[i] = 2 * double(rand())/RAND_MAX - 1;
     }
     Plaintext pt = cc->MakeCKKSPackedPlaintext(vec);
     auto ct = cc->Encrypt(kp.publicKey, pt);
 
     vector<double> kernel(KERNEL*KERNEL,0);
     for(size_t i = 0; i < KERNEL*KERNEL; i++){
-        // kernel[i] = 2 * double(rand())/RAND_MAX - 1;
-        kernel[i] = i;
+        kernel[i] = 2 * double(rand())/RAND_MAX - 1;
     }
 
 
